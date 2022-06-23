@@ -12,7 +12,7 @@ Therefore, this technical challenge for the full-stack developer role is focused
 
 The challenge is to create a small SPA that exhibits a page with a table of financial transactions, which can be filtered by account and by date range (start month and end month), and a sub page with the transaction details after clicking on a row of the previous table. Use the technologies of our stack as much as you can (preferably all), but TypeScript is expected only for the back-end. A [transactions CSV file](./data/transactions.csv) with a bunch of sample data is attached to this repository.
 
-![Sample Layout for Transactions Page](./sample-layout.png)
+![Sample Layout for Transactions Page](https://github.com/joinairbank/challenges/raw/main/dev-fullstack/sample-layout.png)
 
 There's no mandatory layout to copy, but we propose to show something simple yet organized in a minimalist way. Take the image as a bare example, not a strict design to follow.
 
