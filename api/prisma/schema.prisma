@@ -7,7 +7,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DB_HOST")
+  url      = env("DB_URL")
 }
 
 model Transaction {

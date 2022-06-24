@@ -5,3 +5,10 @@ services:
     image: igordonin/challenge-ab-client
     ports:
       - '3000:3000'
+  local-postgres:
+    image: postgres:14.4
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_USER=airbankdb
+      - POSTGRES_PASSWORD=1g0rD0n1n
