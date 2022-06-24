@@ -7,7 +7,7 @@ metadata:
     nginx.ingress.kubernetes.io/use-regex: 'true'
 spec:
   rules:
-    - host: challenge.ab
+    - host: challenge.airbank
       http:
         paths:
           - path: /api/?(.*)
@@ -16,7 +16,7 @@ spec:
               service:
                 name: api-srv
                 port:
-                  number: 3000
+                  number: 4000
           - path: /?(.*)
             pathType: Prefix
             backend:

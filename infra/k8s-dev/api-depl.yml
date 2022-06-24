@@ -19,7 +19,7 @@ spec:
             - name: JWT_KEY
               valueFrom:
                 secretKeyRef:
-                  name: airbank-secret
+                  name: airbank-secrets
                   key: JWT_KEY
             # TODO replace db for prisma
             - name: DB_HOST
@@ -27,12 +27,12 @@ spec:
             - name: 'DB_USER'
               valueFrom:
                 secretKeyRef:
-                  name: airbank-secret
+                  name: airbank-secrets
                   key: DB_USER
             - name: 'DB_PW'
               valueFrom:
                 secretKeyRef:
-                  name: airbank-secret
+                  name: airbank-secrets
                   key: DB_PW
 ---
 apiVersion: v1

@@ -7,9 +7,9 @@ deploy:
       - ./infra/k8s-dev/*
 build:
   googleCloudBuild:
-    projectId: challenge-ab
+    projectId: challenge-pl
   artifacts:
-    - image: us.gcr.io/challenge-ab/api
+    - image: us.gcr.io/challenge-pl/api
       context: api
       docker:
         dockerfile: Dockerfile
@@ -17,7 +17,7 @@ build:
         manual:
           - src: 'src/**/*.ts'
             dest: .
-    - image: us.gcr.io/challenge-ab/client
+    - image: us.gcr.io/challenge-pl/client
       context: client
       docker:
         dockerfile: Dockerfile
