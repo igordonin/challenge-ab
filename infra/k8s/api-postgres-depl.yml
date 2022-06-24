@@ -1,0 +1,83 @@
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: api-postgres-pv
+  labels:
+    type: local
+    app: api-postgres
+spec:
+  capacity:
+    storage: 10Gi
+  storageClassName: standard
+  accessModes:
+    - ReadWriteOnce
+  gcePersistentDisk:
+    pdName: api-postgres-pv
+    fsType: ext4
+    readOnly: true
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: api-postgres-pvc
+  labels:
+    type: local
+    app: api-postgres
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  volumeName: api-postgres-pv
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: api-postgres-depl
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: api-postgres
+    spec:
+      containers:
+        - name: postgres-container
+          image: postgres:9.6.6
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: airbank-secret
+                  key: DB_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: airbank-secret
+                  key: DB_PW   
+            - name: POSTGRES_DB
+              value: airbankdb
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: postgres-volume-mount
+      volumes:
+        - name: postgres-volume-mount
+          persistentVolumeClaim:
+            claimName: api-postgres-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-postgres
+  labels:
+    app: api-postgres
+spec:
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432
+  selector:
+   app: api-postgres
