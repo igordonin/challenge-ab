@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: client
-          image: us.gcr.io/challenge-ab/client
+          image: us.gcr.io/challenge-pl/client
           env: 
             - name: API_BASE_URL
               value: 'api-srv'

@@ -14,16 +14,26 @@ spec:
     spec:
       containers:
         - name: api
-          image: us.gcr.io/challenge-ab/api
+          image: us.gcr.io/challenge-pl/api
           env: 
             - name: JWT_KEY
               valueFrom:
                 secretKeyRef:
-                  name: jwt-secret
+                  name: airbank-secret
                   key: JWT_KEY
             # TODO replace db for prisma
             - name: DB_HOST
-              value: 'api-mongo-srv'
+              value: 'api-postgres'
+            - name: 'DB_USER'
+              valueFrom:
+                secretKeyRef:
+                  name: airbank-secret
+                  key: DB_USER
+            - name: 'DB_PW'
+              valueFrom:
+                secretKeyRef:
+                  name: airbank-secret
+                  key: DB_PW
 ---
 apiVersion: v1
 kind: Service
