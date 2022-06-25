@@ -4,7 +4,7 @@ ENV NODE_ENV=dev
 
 WORKDIR /app
 
-COPY package.json .
+COPY package.json yarn.lock tsconfig.json ./
 
 RUN yarn install
 
