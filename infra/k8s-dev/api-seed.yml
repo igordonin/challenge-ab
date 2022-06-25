@@ -1,27 +1,26 @@
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: batch/v1
+kind: Job
 metadata:
-  name: api-depl
+  name: api-seed
 spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: api
   template:
-    metadata:
-      labels:
-        app: api
     spec:
+      restartPolicy: OnFailure
       containers:
-        - name: api
+        - name: api-seed
           image: us.gcr.io/challenge-pl/api
+          command: ['/bin/sh', '-c']
+          #--skip-seed &&
+          args:
+            - npx prisma migrate deploy &&
+              npx prisma generate &&
+              npx prisma db seed
           env:
             - name: JWT_KEY
               valueFrom:
                 secretKeyRef:
                   name: airbank-secrets
                   key: JWT_KEY
-            # TODO replace db for prisma
             - name: DB_HOST
               value: 'api-postgres'
             - name: 'DB_USER'
@@ -36,16 +35,4 @@ spec:
                   key: DB_PW
             - name: 'DB_URL'
               value: postgresql://$(DB_USER):$(DB_PW)@$(DB_HOST):5432/airbankdb?schema=public
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: api-srv
-spec:
-  selector:
-    app: api
-  ports:
-    - name: api
-      protocol: TCP
-      port: 3000
-      targetPort: 3000
+  backoffLimit: 3

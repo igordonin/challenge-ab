@@ -37,8 +37,8 @@ const convert = (transactionCsv: TransactionCsv): Transaction => {
 const executeTransactionsMigration = (prisma: PrismaClient) => {
   const csvFilePath = './prisma/migrations-data/transactions.csv';
 
-  const batches: { [index: number]: Transaction[] } = {};
-  const batchSize = 50000;
+  const batchsMap: { [index: number]: Transaction[] } = {};
+  const batchSize = 20000;
   let batchIndex = 0;
   let counter = 0;
 
@@ -50,11 +50,11 @@ const executeTransactionsMigration = (prisma: PrismaClient) => {
           counter = 0;
           batchIndex++;
         }
-        batches[batchIndex] = batches[batchIndex] || [];
+        batchsMap[batchIndex] = batchsMap[batchIndex] || [];
 
         const transaction = convert(transactionCsv);
 
-        batches[batchIndex].push(transaction);
+        batchsMap[batchIndex].push(transaction);
         counter++;
       },
       (err) =>
@@ -62,13 +62,12 @@ const executeTransactionsMigration = (prisma: PrismaClient) => {
           err,
         }),
       async () => {
-        Object.values(batches).forEach(
-          async (transactions: Transaction[], index: number) => {
-            await prisma.transaction.createMany({ data: transactions });
-          }
-        );
-
+        const batchs = Object.values(batchsMap);
+        for (let i = 0; i < batchs.length; i++) {
+          await prisma.transaction.createMany({ data: batchs[i] });
+        }
         await prisma.$disconnect();
+        process.exit(0);
       }
     );
 };
