@@ -1,10 +1,6 @@
 version: '3.1'
 
 services:
-  ab-client:
-    image: igordonin/challenge-ab-client
-    ports:
-      - '3000:3000'
   local-postgres:
     image: postgres:14.4
     ports:
@@ -12,3 +8,10 @@ services:
     environment:
       - POSTGRES_USER=airbankdb
       - POSTGRES_PASSWORD=1g0rD0n1n
+  ab-client:
+    image: igordonin/challenge-ab-client
+    ports:
+      - '3000:3000'
+    depends_on:
+      - local-postgres
+  
