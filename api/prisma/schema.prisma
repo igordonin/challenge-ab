@@ -11,26 +11,26 @@ datasource db {
 }
 
 model Transaction {
-  id         String   @id @default(uuid())
-  accountId  String
-  account    Account  @relation(fields: [accountId], references: [id])
-  categoryId String
-  category   Category @relation(fields: [categoryId], references: [id])
+  id         String    @id @default(uuid()) @db.Uuid
+  accountId  String    @db.Uuid
+  account    Account   @relation(fields: [accountId], references: [id])
+  categoryId String?   @db.Uuid
+  category   Category? @relation(fields: [categoryId], references: [id])
   reference  String?
   amount     Float
-  currency   String   @db.Char(3)
-  date       DateTime @default(now())
+  currency   String    @db.Char(3)
+  date       DateTime  @default(now())
 }
 
 model Category {
-  id          String        @id @default(uuid())
+  id          String        @id @default(uuid()) @db.Uuid
   name        String
   color       String?       @db.Char(6)
   Transaction Transaction[]
 }
 
 model Account {
-  id          String        @id @default(uuid())
+  id          String        @id @default(uuid()) @db.Uuid
   name        String
   Transaction Transaction[]
 }
