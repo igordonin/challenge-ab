@@ -31,7 +31,7 @@ export const transactions: Transaction[] = [
     account: accounts[0],
     amount: 10,
     currency: 'BRL',
-    date: new Date(),
+    date: new Date().toUTCString(),
   },
   {
     id: 'transaction2',
@@ -39,6 +39,6 @@ export const transactions: Transaction[] = [
     account: accounts[1],
     amount: 20,
     currency: 'USD',
-    date: new Date(),
+    date: new Date().toUTCString(),
   },
 ];

@@ -10,5 +10,5 @@ export interface Transaction {
   reference?: String;
   amount: Number;
   currency: String;
-  date: Date;
+  date: String;
 }
