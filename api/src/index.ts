@@ -1,55 +1,26 @@
 import { ApolloServer, gql } from 'apollo-server';
+import { GraphQLFileLoader } from '@graphql-tools/graphql-file-loader';
+import { loadSchemaSync } from '@graphql-tools/load';
+import { makeExecutableSchema } from '@graphql-tools/schema';
+import { graphqlResolvers } from './graphql/resolvers';
 import dotenv from 'dotenv';
 import dotenvExpand from 'dotenv-expand';
 
+// This is for development only
 const envConfig = dotenv.config();
 dotenvExpand.expand(envConfig);
-console.log({ DB_URL: process.env['DB_URL'] });
 
-// A schema is a collection of type definitions (hence "typeDefs")
-// that together define the "shape" of queries that are executed against
-// your data.
-const typeDefs = gql`
-  # Comments in GraphQL strings (such as this one) start with the hash (#) symbol.
-
-  # This "Book" type defines the queryable fields for every book in our data source.
-  type Book {
-    title: String
-    author: String
-  }
-
-  # The "Query" type is special: it lists all of the available queries that
-  # clients can execute, along with the return type for each. In this
-  # case, the "books" query returns an array of zero or more Books (defined above).
-  type Query {
-    books: [Book]
-  }
-`;
-
-const books = [
-  {
-    title: 'The Awakening',
-    author: 'Kate Chopin',
-  },
-  {
-    title: 'City of Glass',
-    author: 'Paul Auster',
-  },
-];
-
-// Resolvers define the technique for fetching the types defined in the
-// schema. This resolver retrieves books from the "books" array above.
-const resolvers = {
-  Query: {
-    books: () => books,
-  },
-};
+export const graphqlSchema = makeExecutableSchema({
+  typeDefs: loadSchemaSync('**/*.graphql', {
+    loaders: [new GraphQLFileLoader()],
+  }),
+  resolvers: graphqlResolvers,
+});
 
 // The ApolloServer constructor requires two parameters: your schema
 // definition and your set of resolvers.
 const server = new ApolloServer({
-  typeDefs,
-  resolvers,
+  schema: graphqlSchema,
   csrfPrevention: true,
   cache: 'bounded',
 });

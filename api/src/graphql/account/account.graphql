@@ -1,0 +1,10 @@
+type AccountSchema {
+  id: ID!
+  name: String!
+  transactions: [TransactionSchema]
+}
+
+extend type Query {
+  accounts: [AccountSchema]!
+  account(id: ID!): AccountSchema
+}

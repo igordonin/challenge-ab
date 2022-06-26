@@ -1,0 +1,16 @@
+type TransactionSchema {
+  id: ID!
+  accountId: String!
+  account: AccountSchema
+  categoryId: String
+  category: CategorySchema
+  reference: String
+  amount: Float!
+  currency: String!
+  date: String!
+}
+
+extend type Query {
+  transactions: [TransactionSchema]!
+  transaction(id: ID!): TransactionSchema
+}

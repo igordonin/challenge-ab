@@ -1,0 +1,11 @@
+type CategorySchema {
+  id: ID!
+  name: String!
+  color: String
+  transactions: [TransactionSchema]
+}
+
+extend type Query {
+  categories: [CategorySchema]!
+  category(id: ID!): CategorySchema
+}
