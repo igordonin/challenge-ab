@@ -1,9 +1,9 @@
-type TransactionSchema {
+type Transaction {
   id: ID!
   accountId: String!
-  account: AccountSchema
+  account: Account!
   categoryId: String
-  category: CategorySchema
+  category: Category
   reference: String
   amount: Float!
   currency: String!
@@ -11,6 +11,6 @@ type TransactionSchema {
 }
 
 extend type Query {
-  transactions: [TransactionSchema]!
-  transaction(id: ID!): TransactionSchema
+  findAllTransactions(skip: Int, take: Int): [Transaction]!
+  findUniqueTransactionById(id: ID!): Transaction
 }

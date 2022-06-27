@@ -1,11 +1,11 @@
-type CategorySchema {
+type Category {
   id: ID!
   name: String!
   color: String
-  transactions: [TransactionSchema]
+  transactions: [Transaction]
 }
 
 extend type Query {
-  categories: [CategorySchema]!
-  category(id: ID!): CategorySchema
+  findAllCategories: [Category]!
+  findUniqueCategoryById(id: ID!): Category
 }

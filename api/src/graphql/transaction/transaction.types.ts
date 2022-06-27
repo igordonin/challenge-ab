@@ -2,13 +2,13 @@ import { Account } from '../account/account.types';
 import { Category } from '../category/category.types';
 
 export interface Transaction {
-  id: String;
-  accountId: String;
-  account: Account;
-  categoryId?: String;
+  id: string;
+  accountId: string;
+  account?: Account;
+  categoryId: string | null;
   category?: Category;
-  reference?: String;
-  amount: Number;
-  currency: String;
-  date: String;
+  reference: string | null;
+  amount: number;
+  currency: string;
+  date: Date;
 }

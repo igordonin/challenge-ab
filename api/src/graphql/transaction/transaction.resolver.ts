@@ -1,17 +1,27 @@
+import { PrismaClient } from '@prisma/client';
+import { PaginationArgs } from '../../common/pagination-args';
 import { HasId } from '../../common/has-id';
-import { transactions } from '../../data';
 import { Transaction } from './transaction.types';
+
+const prisma = new PrismaClient();
 
 export const transactionResolvers = {
   Query: {
-    transactions: (): Transaction[] => transactions,
-    transaction: (
+    findAllTransactions: (
+      skip: number,
+      take: number
+    ): Promise<Transaction[]> => {
+      return prisma.transaction.findMany({ skip, take });
+    },
+    findUniqueTransactionById: (
       _parent: Transaction,
       { id }: HasId
-    ): Transaction | undefined => {
-      return transactions.find(
-        (transaction: Transaction) => transaction.id === id
-      );
+    ): Promise<Transaction | null> => {
+      return prisma.transaction.findUnique({
+        where: {
+          id,
+        },
+      });
     },
   },
 };

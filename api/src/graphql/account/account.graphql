@@ -1,10 +1,10 @@
-type AccountSchema {
+type Account {
   id: ID!
   name: String!
-  transactions: [TransactionSchema]
+  transactions: [Transaction]
 }
 
 extend type Query {
-  accounts: [AccountSchema]!
-  account(id: ID!): AccountSchema
+  findAllAccounts: [Account]!
+  findUniqueAccountById(id: ID!): Account
 }

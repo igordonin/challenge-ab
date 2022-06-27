@@ -1,12 +1,27 @@
+import { PrismaClient } from '@prisma/client';
+import { PaginationArgs } from '../../common/pagination-args';
 import { HasId } from '../../common/has-id';
-import { categories } from '../../data';
 import { Category } from './category.types';
+
+const prisma = new PrismaClient();
 
 export const categoryResolvers = {
   Query: {
-    categories: (): Category[] => categories,
-    category: (_parent: Category, { id }: HasId): Category | undefined => {
-      return categories.find((category: Category) => category.id === id);
+    findAllCategories: ({
+      skip,
+      take,
+    }: PaginationArgs): Promise<Category[]> => {
+      return prisma.category.findMany({ skip, take });
+    },
+    findUniqueCategoryById: (
+      _parent: Category,
+      { id }: HasId
+    ): Promise<Category | null> => {
+      return prisma.category.findUnique({
+        where: {
+          id,
+        },
+      });
     },
   },
 };

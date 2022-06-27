@@ -1,8 +1,8 @@
 import { Transaction } from '../transaction/transaction.types';
 
 export interface Category {
-  id: String;
-  name: String;
-  color?: String;
+  id: string;
+  name: string;
+  color: string | null;
   transactions?: Transaction[];
 }
