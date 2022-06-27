@@ -11,7 +11,14 @@ export const transactionResolvers = {
       _parent: Transaction,
       { skip, take }: PaginationArgs
     ): Promise<Transaction[]> => {
-      return prisma.transaction.findMany({ skip, take });
+      return prisma.transaction.findMany({
+        skip,
+        take,
+        include: {
+          category: true,
+          account: true,
+        },
+      });
     },
     findUniqueTransactionById: (
       _parent: Transaction,

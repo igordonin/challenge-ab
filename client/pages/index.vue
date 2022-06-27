@@ -78,7 +78,7 @@
                       <div
                         class="text-xs inline-flex items-center font-bold leading-sm px-3 py-1 bg-gray-200 rounded-md"
                       >
-                        {{ transaction.category || 'Uncategorized' }}
+                        {{ transaction.category.name || 'Uncategorized' }}
                       </div>
                     </div>
                   </td>
@@ -106,17 +106,36 @@
 </template>
 
 <script>
+const query = `
+query FindAllTransactions($skip: Int!, $take: Int!) { 
+  findAllTransactions(skip: $skip, take: $take) { 
+    id 
+    reference 
+    category { 
+      id 
+      name 
+    } 
+    date 
+    amount 
+    currency 
+  } 
+}
+`
+
 export default {
   name: 'IndexPage',
   async asyncData({ $axios }) {
     // TODO: Fix api client URL
     const response = await $axios.post('http://localhost:4000/api/graphql', {
-      operationName: 'transactions',
-      query: `query transactions { transactions { id reference category { id name } date amount currency } }`,
-      variables: {},
+      operationName: 'FindAllTransactions',
+      query,
+      variables: {
+        skip: 2000,
+        take: 200,
+      },
     })
 
-    const transactions = response.data.data.transactions
+    const transactions = response.data.data.findAllTransactions
 
     return {
       // TODO: Fix pagination
@@ -128,6 +147,7 @@ export default {
           date: new Date(t.date).toLocaleDateString(),
           amount: t.amount.toFixed(2),
           currency: t.currency,
+          category: t.category || {},
         }
       }),
     }
