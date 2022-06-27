@@ -14,10 +14,17 @@
           <div class="grid gap-4 grid-cols-3">
             <div>
               <label class="text-gray-700" for="account">Account</label>
-              <input
+              <select
                 class="w-5/6 rounded-none border-2 border-gray-200 mt-2 p-1"
-                type="text"
-              />
+              >
+                <option
+                  v-for="account of accounts"
+                  :key="account.id"
+                  :value="account.id"
+                >
+                  {{ account.name }}
+                </option>
+              </select>
             </div>
             <div>
               <label class="text-gray-700" for="start-month">Start Month</label>
@@ -77,6 +84,9 @@
                     <div class="text-left">
                       <div
                         class="text-xs inline-flex items-center font-bold leading-sm px-3 py-1 bg-gray-200 rounded-md"
+                        :style="{
+                          backgroundColor: convertToRgba(transaction.category),
+                        }"
                       >
                         {{ transaction.category.name || 'Uncategorized' }}
                       </div>
@@ -106,29 +116,35 @@
 </template>
 
 <script>
-const query = `
-query FindAllTransactions($skip: Int!, $take: Int!) { 
-  findAllTransactions(skip: $skip, take: $take) { 
-    id 
-    reference 
-    category { 
-      id 
-      name 
-    } 
-    date 
-    amount 
-    currency 
-  } 
+const initialLoad = `
+query InitialLoad($skip: Int!, $take: Int!) {
+  findAllAccounts {
+    id
+    name
+  }
+  findAllTransactions(skip: $skip, take: $take) {
+    id
+    reference
+    category {
+      id
+      name
+      color
+    }
+    date
+    amount
+    currency
+  }
 }
 `
 
 export default {
   name: 'IndexPage',
+
   async asyncData({ $axios }) {
     // TODO: Fix api client URL
     const response = await $axios.post('http://localhost:4000/api/graphql', {
-      operationName: 'FindAllTransactions',
-      query,
+      operationName: 'InitialLoad',
+      query: initialLoad,
       variables: {
         skip: 2000,
         take: 200,
@@ -136,21 +152,37 @@ export default {
     })
 
     const transactions = response.data.data.findAllTransactions
+    const accounts = response.data.data.findAllAccounts
 
     return {
       // TODO: Fix pagination
       currentPage: 1,
+      accounts: [{ id: null, name: 'No Filter' }, ...accounts],
       transactions: transactions.map((t) => {
         return {
           id: t.id,
           reference: t.reference,
-          date: new Date(t.date).toLocaleDateString(),
+          date: new Date(parseInt(t.date, 10)).toLocaleDateString(),
           amount: t.amount.toFixed(2),
           currency: t.currency,
           category: t.category || {},
         }
       }),
     }
+  },
+  methods: {
+    convertToRgba(category) {
+      const hex = category?.color || 'cccccc'
+      const rgbHex = hex.match(/.{1,2}/g)
+
+      const rgb = [
+        parseInt(rgbHex[0], 16),
+        parseInt(rgbHex[1], 16),
+        parseInt(rgbHex[2], 16),
+      ]
+
+      return `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, 0.5)`
+    },
   },
 }
 </script>
