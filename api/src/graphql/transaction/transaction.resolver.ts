@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { PaginationArgs } from '../../common/pagination-args';
+import { PaginationArgs } from 'src/common/pagination-args';
 import { HasId } from '../../common/has-id';
 import { Transaction } from './transaction.types';
 
@@ -8,8 +8,8 @@ const prisma = new PrismaClient();
 export const transactionResolvers = {
   Query: {
     findAllTransactions: (
-      skip: number,
-      take: number
+      _parent: Transaction,
+      { skip, take }: PaginationArgs
     ): Promise<Transaction[]> => {
       return prisma.transaction.findMany({ skip, take });
     },

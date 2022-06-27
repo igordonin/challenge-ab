@@ -7,7 +7,10 @@ const prisma = new PrismaClient();
 
 export const accountResolvers = {
   Query: {
-    findAllAccounts: ({ skip, take }: PaginationArgs): Promise<Account[]> => {
+    findAllAccounts: (
+      _parent: Account,
+      { skip, take }: PaginationArgs
+    ): Promise<Account[]> => {
       return prisma.account.findMany({ skip, take });
     },
     findUniqueAccountById: (

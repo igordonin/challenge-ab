@@ -7,10 +7,10 @@ const prisma = new PrismaClient();
 
 export const categoryResolvers = {
   Query: {
-    findAllCategories: ({
-      skip,
-      take,
-    }: PaginationArgs): Promise<Category[]> => {
+    findAllCategories: (
+      _parent: Category,
+      { skip, take }: PaginationArgs
+    ): Promise<Category[]> => {
       return prisma.category.findMany({ skip, take });
     },
     findUniqueCategoryById: (
