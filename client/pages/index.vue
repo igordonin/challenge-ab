@@ -15,7 +15,9 @@
             <div>
               <label class="text-gray-700" for="account">Account</label>
               <select
+                id="account"
                 class="w-5/6 rounded-none border-2 border-gray-200 mt-2 p-1"
+                @change="onSelectAccount"
               >
                 <option
                   v-for="account of accounts"
@@ -29,15 +31,25 @@
             <div>
               <label class="text-gray-700" for="start-month">Start Month</label>
               <input
+                id="start-month"
                 class="w-5/6 rounded-none border-2 border-gray-200 mt-2 p-1"
+                :class="{ invalidDate: isStartDateInvalid() }"
                 type="text"
+                placeholder="yyyy-mm"
+                :value="filters.startDate"
+                @input="setStartDate"
               />
             </div>
             <div>
               <label class="text-gray-700" for="end-month">End Month</label>
               <input
+                id="end-month"
                 class="w-5/6 rounded-none border-2 border-gray-200 mt-2 p-1"
+                :class="{ invalidDate: isEndDateInvalid() }"
                 type="text"
+                placeholder="yyyy-mm"
+                :value="filters.endDate"
+                @input="setEndDate"
               />
             </div>
           </div>
@@ -137,9 +149,48 @@ query InitialLoad($skip: Int!, $take: Int!) {
 }
 `
 
+const findAllTransactionsQuery = `
+query FilterTransactions(
+  $skip: Int!, 
+  $take: Int!, 
+  $accountId: String, 
+  $startDate: String, 
+  $endDate: String
+) {
+  findAllTransactions(
+    skip: $skip, 
+    take: $take, 
+    accountId: $accountId, 
+    startDate: $startDate, 
+    endDate: $endDate
+  ) {
+    id
+    reference
+    category {
+      id
+      name
+      color
+    }
+    date
+    amount
+    currency
+  }
+}
+`
+
+const convertTransactions = (transactions) => {
+  return transactions.map((t) => ({
+    id: t.id,
+    reference: t.reference,
+    date: new Date(parseInt(t.date, 10)).toLocaleDateString(),
+    amount: t.amount.toFixed(2),
+    currency: t.currency,
+    category: t.category || {},
+  }))
+}
+
 export default {
   name: 'IndexPage',
-
   async asyncData({ $axios }) {
     // TODO: Fix api client URL
     const response = await $axios.post('http://localhost:4000/api/graphql', {
@@ -151,26 +202,50 @@ export default {
       },
     })
 
-    const transactions = response.data.data.findAllTransactions
-    const accounts = response.data.data.findAllAccounts
+    const transactions = response.data.data?.findAllTransactions || []
+    const accounts = response.data.data?.findAllAccounts || []
 
     return {
       // TODO: Fix pagination
       currentPage: 1,
       accounts: [{ id: null, name: 'No Filter' }, ...accounts],
-      transactions: transactions.map((t) => {
-        return {
-          id: t.id,
-          reference: t.reference,
-          date: new Date(parseInt(t.date, 10)).toLocaleDateString(),
-          amount: t.amount.toFixed(2),
-          currency: t.currency,
-          category: t.category || {},
-        }
-      }),
+      transactions: convertTransactions(transactions),
+    }
+  },
+  data() {
+    return {
+      filters: {
+        accountId: null,
+        startDate: null,
+        endDate: null,
+      },
     }
   },
   methods: {
+    setStartDate(event) {
+      this.filters.startDate = event.target.value
+      const isValid = this.isValidYearMonth(this.filters.startDate)
+      if (isValid) {
+        this.filterTransactions()
+      }
+    },
+    isStartDateInvalid() {
+      return !this.isValidYearMonth(this.filters.startDate)
+    },
+    setEndDate(event) {
+      this.filters.endDate = event.target.value
+      const isValid = this.isValidYearMonth(this.filters.endDate)
+      if (isValid) {
+        this.filterTransactions()
+      }
+    },
+    isEndDateInvalid() {
+      return !this.isValidYearMonth(this.filters.endDate)
+    },
+    onSelectAccount(event) {
+      this.filters.accountId = event.target.value
+      this.filterTransactions()
+    },
     convertToRgba(category) {
       const hex = category?.color || 'cccccc'
       const rgbHex = hex.match(/.{1,2}/g)
@@ -183,6 +258,42 @@ export default {
 
       return `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, 0.5)`
     },
+    isValidYearMonth(yearMonth) {
+      if (!yearMonth) {
+        return true
+      }
+
+      const yearMonthRegex = /^\d{4}-(0[1-9]|1[0-2])$/
+      return yearMonthRegex.test(yearMonth)
+    },
+    async filterTransactions() {
+      // TODO Fix Offset Pagination
+      const response = await this.$axios.post(
+        'http://localhost:4000/api/graphql',
+        {
+          operationName: 'FilterTransactions',
+          query: findAllTransactionsQuery,
+          variables: {
+            skip: 2000,
+            take: 200,
+            accountId: this.filters.accountId,
+            startDate: this.filters.startDate,
+            endDate: this.filters.endDate,
+          },
+        }
+      )
+
+      const transactions = response.data.data?.findAllTransactions
+
+      this.transactions = convertTransactions(transactions)
+    },
   },
 }
 </script>
+
+<style>
+.invalidDate {
+  border-color: rgb(220, 50, 50);
+  outline-color: rgb(220, 50, 50);
+}
+</style>

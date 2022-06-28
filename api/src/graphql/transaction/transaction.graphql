@@ -11,6 +11,12 @@ type Transaction {
 }
 
 extend type Query {
-  findAllTransactions(skip: Int!, take: Int!): [Transaction]!
+  findAllTransactions(
+    skip: Int!
+    take: Int!
+    accountId: String
+    startDate: String
+    endDate: String
+  ): [Transaction]!
   findUniqueTransactionById(id: ID!): Transaction
 }
