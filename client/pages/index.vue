@@ -124,6 +124,9 @@
         </div>
       </div>
     </div>
+    <client-only>
+      <InfiniteLoading spinner="spiral" @infinite="infiniteScroll" />
+    </client-only>
   </section>
 </template>
 
@@ -151,17 +154,17 @@ query InitialLoad($skip: Int!, $take: Int!) {
 
 const findAllTransactionsQuery = `
 query FilterTransactions(
-  $skip: Int!, 
-  $take: Int!, 
-  $accountId: String, 
-  $startDate: String, 
+  $skip: Int!,
+  $take: Int!,
+  $accountId: String,
+  $startDate: String,
   $endDate: String
 ) {
   findAllTransactions(
-    skip: $skip, 
-    take: $take, 
-    accountId: $accountId, 
-    startDate: $startDate, 
+    skip: $skip,
+    take: $take,
+    accountId: $accountId,
+    startDate: $startDate,
     endDate: $endDate
   ) {
     id
@@ -197,8 +200,8 @@ export default {
       operationName: 'InitialLoad',
       query: initialLoad,
       variables: {
-        skip: 2000,
-        take: 200,
+        skip: 0,
+        take: 100,
       },
     })
 
@@ -206,14 +209,16 @@ export default {
     const accounts = response.data.data?.findAllAccounts || []
 
     return {
-      // TODO: Fix pagination
-      currentPage: 1,
       accounts: [{ id: null, name: 'No Filter' }, ...accounts],
       transactions: convertTransactions(transactions),
     }
   },
   data() {
     return {
+      pagination: {
+        skip: 0,
+        take: 100,
+      },
       filters: {
         accountId: null,
         startDate: null,
@@ -226,7 +231,7 @@ export default {
       this.filters.startDate = event.target.value
       const isValid = this.isValidYearMonth(this.filters.startDate)
       if (isValid) {
-        this.filterTransactions()
+        this.transactions = this.fetchTransactions()
       }
     },
     isStartDateInvalid() {
@@ -236,7 +241,7 @@ export default {
       this.filters.endDate = event.target.value
       const isValid = this.isValidYearMonth(this.filters.endDate)
       if (isValid) {
-        this.filterTransactions()
+        this.transactions = this.fetchTransactions()
       }
     },
     isEndDateInvalid() {
@@ -244,7 +249,7 @@ export default {
     },
     onSelectAccount(event) {
       this.filters.accountId = event.target.value
-      this.filterTransactions()
+      this.transactions = this.fetchTransactions()
     },
     convertToRgba(category) {
       const hex = category?.color || 'cccccc'
@@ -266,16 +271,16 @@ export default {
       const yearMonthRegex = /^\d{4}-(0[1-9]|1[0-2])$/
       return yearMonthRegex.test(yearMonth)
     },
-    async filterTransactions() {
-      // TODO Fix Offset Pagination
+    async fetchTransactions() {
+      // TODO Fix URL
       const response = await this.$axios.post(
         'http://localhost:4000/api/graphql',
         {
           operationName: 'FilterTransactions',
           query: findAllTransactionsQuery,
           variables: {
-            skip: 2000,
-            take: 200,
+            skip: this.pagination.skip || 0,
+            take: this.pagination.take || 100,
             accountId: this.filters.accountId,
             startDate: this.filters.startDate,
             endDate: this.filters.endDate,
@@ -285,7 +290,19 @@ export default {
 
       const transactions = response.data.data?.findAllTransactions
 
-      this.transactions = convertTransactions(transactions)
+      return convertTransactions(transactions)
+    },
+    async infiniteScroll($state) {
+      this.pagination.skip += this.pagination.take
+
+      const transactions = await this.fetchTransactions()
+      this.transactions = [...this.transactions, ...transactions]
+
+      if (transactions && transactions.length) {
+        $state.loaded()
+      } else {
+        $state.completed()
+      }
     },
   },
 }
