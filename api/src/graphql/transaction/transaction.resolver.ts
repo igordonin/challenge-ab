@@ -101,6 +101,10 @@ export const transactionResolvers = {
         where: {
           id,
         },
+        include: {
+          category: true,
+          account: true,
+        },
       });
     },
   },

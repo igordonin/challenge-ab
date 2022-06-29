@@ -78,7 +78,11 @@
               </thead>
 
               <tbody class="text-sm divide-y divide-gray-100">
-                <tr v-for="transaction of transactions" :key="transaction.id">
+                <tr
+                  v-for="transaction of transactions"
+                  :key="transaction.id"
+                  @click="onTransactionSelected(transaction.id)"
+                >
                   <td class="p-2 whitespace-nowrap">
                     <div class="font-medium text-gray-800">
                       <p v-if="transaction.reference">
@@ -97,7 +101,9 @@
                       <div
                         class="text-xs inline-flex items-center font-bold leading-sm px-3 py-1 bg-gray-200 rounded-md"
                         :style="{
-                          backgroundColor: convertToRgba(transaction.category),
+                          backgroundColor: delegateConvertToRgba(
+                            transaction.category
+                          ),
                         }"
                       >
                         {{ transaction.category.name || 'Uncategorized' }}
@@ -124,6 +130,11 @@
         </div>
       </div>
     </div>
+
+    <modal name="TransactionDetails" :height="160" :width="400">
+      <TransactionDetails />
+    </modal>
+
     <client-only>
       <InfiniteLoading spinner="spiral" @infinite="infiniteScroll" />
     </client-only>
@@ -131,6 +142,8 @@
 </template>
 
 <script>
+import TransactionDetails from '~/components/transaction-details.vue'
+
 const initialLoad = `
 query InitialLoad($skip: Int!, $take: Int!) {
   findAllAccounts {
@@ -194,6 +207,7 @@ const convertTransactions = (transactions) => {
 
 export default {
   name: 'IndexPage',
+  components: { TransactionDetails },
   async asyncData({ $axios }) {
     // TODO: Fix api client URL
     const response = await $axios.post('http://localhost:4000/api/graphql', {
@@ -204,10 +218,8 @@ export default {
         take: 100,
       },
     })
-
     const transactions = response.data.data?.findAllTransactions || []
     const accounts = response.data.data?.findAllAccounts || []
-
     return {
       accounts: [{ id: null, name: 'No Filter' }, ...accounts],
       transactions: convertTransactions(transactions),
@@ -224,9 +236,25 @@ export default {
         startDate: null,
         endDate: null,
       },
+      transactionDetails: {
+        account: {
+          name: 'Account Name',
+        },
+        category: {
+          name: 'Category Name',
+        },
+        reference: 'reference',
+        amount: 10,
+        currency: 'BRL',
+        date: new Date().toLocaleDateString(),
+      },
     }
   },
   methods: {
+    onTransactionSelected(id) {
+      this.$store.dispatch('fetchTransaction', { id })
+      this.$modal.show('TransactionDetails')
+    },
     setStartDate(event) {
       this.filters.startDate = event.target.value
       const isValid = this.isValidYearMonth(this.filters.startDate)
@@ -251,23 +279,13 @@ export default {
       this.filters.accountId = event.target.value
       this.transactions = this.fetchTransactions()
     },
-    convertToRgba(category) {
-      const hex = category?.color || 'cccccc'
-      const rgbHex = hex.match(/.{1,2}/g)
-
-      const rgb = [
-        parseInt(rgbHex[0], 16),
-        parseInt(rgbHex[1], 16),
-        parseInt(rgbHex[2], 16),
-      ]
-
-      return `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, 0.5)`
+    delegateConvertToRgba(category) {
+      return this.convertToRgba(category)
     },
     isValidYearMonth(yearMonth) {
       if (!yearMonth) {
         return true
       }
-
       const yearMonthRegex = /^\d{4}-(0[1-9]|1[0-2])$/
       return yearMonthRegex.test(yearMonth)
     },
@@ -287,17 +305,13 @@ export default {
           },
         }
       )
-
       const transactions = response.data.data?.findAllTransactions
-
       return convertTransactions(transactions)
     },
     async infiniteScroll($state) {
       this.pagination.skip += this.pagination.take
-
       const transactions = await this.fetchTransactions()
       this.transactions = [...this.transactions, ...transactions]
-
       if (transactions && transactions.length) {
         $state.loaded()
       } else {

@@ -18,5 +18,6 @@ extend type Query {
     startDate: String
     endDate: String
   ): [Transaction]!
+
   findUniqueTransactionById(id: ID!): Transaction
 }
