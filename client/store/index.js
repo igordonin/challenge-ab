@@ -94,7 +94,7 @@ query FilterTransactions(
 export const actions = {
   async fetchTransaction({ commit }, { id }) {
     const response = await this.$axios.post(
-      'http://localhost:4000/api/graphql',
+      `${process.env.apiBaseUrl}/api/graphql`,
       {
         operationName: 'FetchUniqueTransaction',
         query: fetchTransactionQuery,
@@ -112,9 +112,8 @@ export const actions = {
     return convertedTransaction
   },
   async fetchTransactionsAction(context, { pagination, filters }) {
-    // TODO Fix URL
     const response = await this.$axios.post(
-      'http://localhost:4000/api/graphql',
+      `${process.env.apiBaseUrl}/api/graphql`,
       {
         operationName: 'FilterTransactions',
         query: findAllTransactionsQuery,

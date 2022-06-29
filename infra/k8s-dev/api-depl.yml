@@ -21,7 +21,6 @@ spec:
                 secretKeyRef:
                   name: airbank-secrets
                   key: JWT_KEY
-            # TODO replace db for prisma
             - name: DB_HOST
               value: 'api-postgres'
             - name: 'DB_USER'

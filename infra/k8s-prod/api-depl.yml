@@ -1,6 +1,6 @@
 apiVersion: apps/v1
 kind: Deployment
-metadata: 
+metadata:
   name: api-depl
 spec:
   replicas: 1
@@ -15,7 +15,7 @@ spec:
       containers:
         - name: api
           image: igordonin/challenge-pl-api
-          env: 
+          env:
             - name: JWT_KEY
               valueFrom:
                 secretKeyRef:

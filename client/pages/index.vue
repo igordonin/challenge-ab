@@ -216,9 +216,8 @@ const convertTransactions = (transactions) => {
 export default {
   name: 'IndexPage',
   components: { TransactionDetails },
-  async asyncData({ $axios, store }) {
-    // TODO: Fix api client URL
-    const response = await $axios.post('http://localhost:4000/api/graphql', {
+  async asyncData({ $axios, store, env }) {
+    const response = await $axios.post(`${env.apiBaseUrl}/api/graphql`, {
       operationName: 'InitialLoad',
       query: initialLoad,
       variables: {
@@ -315,9 +314,8 @@ export default {
       return !this.isStartDateInvalid() && !this.isEndDateInvalid()
     },
     async fetchTransactions() {
-      // TODO Fix URL
       const response = await this.$axios.post(
-        'http://localhost:4000/api/graphql',
+        `${process.env.apiBaseUrl}/api/graphql`,
         {
           operationName: 'FilterTransactions',
           query: findAllTransactionsQuery,
