@@ -236,18 +236,6 @@ export default {
         startDate: null,
         endDate: null,
       },
-      transactionDetails: {
-        account: {
-          name: 'Account Name',
-        },
-        category: {
-          name: 'Category Name',
-        },
-        reference: 'reference',
-        amount: 10,
-        currency: 'BRL',
-        date: new Date().toLocaleDateString(),
-      },
     }
   },
   methods: {
@@ -306,6 +294,7 @@ export default {
         }
       )
       const transactions = response.data.data?.findAllTransactions
+
       return convertTransactions(transactions)
     },
     async infiniteScroll($state) {

@@ -12,18 +12,14 @@ const convertTransactions = (transactions) => {
 
 export const state = () => ({
   transactionDetails: {
-    account: {
-      name: 'Account Name',
-    },
-    category: {
-      name: 'Category Name',
-      color: 'ff0000',
-    },
-    reference: 'reference',
-    amount: 10,
-    currency: 'BRL',
-    date: new Date().toLocaleDateString(),
+    account: {},
+    category: {},
+    reference: null,
+    amount: null,
+    currency: null,
+    date: null,
   },
+  transactions: [],
 })
 
 export const getters = {
