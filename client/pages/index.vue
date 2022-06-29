@@ -136,7 +136,15 @@
     </modal>
 
     <client-only>
-      <InfiniteLoading spinner="spiral" @infinite="infiniteScroll" />
+      <InfiniteLoading
+        :identifier="infiniteId"
+        spinner="spiral"
+        force-use-infinite-wrapper="true"
+        @infinite="infiniteScroll"
+      >
+        <div slot="no-more">No more transactions</div>
+        <div slot="no-results">No more transactions</div>
+      </InfiniteLoading>
     </client-only>
   </section>
 </template>
@@ -208,7 +216,7 @@ const convertTransactions = (transactions) => {
 export default {
   name: 'IndexPage',
   components: { TransactionDetails },
-  async asyncData({ $axios }) {
+  async asyncData({ $axios, store }) {
     // TODO: Fix api client URL
     const response = await $axios.post('http://localhost:4000/api/graphql', {
       operationName: 'InitialLoad',
@@ -220,13 +228,13 @@ export default {
     })
     const transactions = response.data.data?.findAllTransactions || []
     const accounts = response.data.data?.findAllAccounts || []
-    return {
-      accounts: [{ id: null, name: 'No Filter' }, ...accounts],
-      transactions: convertTransactions(transactions),
-    }
+
+    store.commit('setTransactions', convertTransactions(transactions))
+    store.commit('setAccounts', [{ id: null, name: 'No Filter' }, ...accounts])
   },
   data() {
     return {
+      infiniteId: +new Date(),
       pagination: {
         skip: 0,
         take: 100,
@@ -238,34 +246,60 @@ export default {
       },
     }
   },
+  computed: {
+    transactions() {
+      return this.$store.state.transactions
+    },
+    accounts() {
+      return this.$store.state.accounts
+    },
+  },
   methods: {
+    resetPagination() {
+      this.pagination = {
+        skip: 0,
+        take: 100,
+      }
+    },
     onTransactionSelected(id) {
       this.$store.dispatch('fetchTransaction', { id })
       this.$modal.show('TransactionDetails')
     },
-    setStartDate(event) {
+    async setStartDate(event) {
       this.filters.startDate = event.target.value
-      const isValid = this.isValidYearMonth(this.filters.startDate)
+      const isValid = this.isValidFilter()
       if (isValid) {
-        this.transactions = this.fetchTransactions()
+        this.resetPagination()
+        const transactions = await this.fetchTransactions()
+        this.$store.commit('setTransactions', transactions)
+        this.infiniteId++
       }
     },
     isStartDateInvalid() {
       return !this.isValidYearMonth(this.filters.startDate)
     },
-    setEndDate(event) {
+    async setEndDate(event) {
       this.filters.endDate = event.target.value
-      const isValid = this.isValidYearMonth(this.filters.endDate)
+      const isValid = this.isValidFilter()
       if (isValid) {
-        this.transactions = this.fetchTransactions()
+        this.resetPagination()
+        const transactions = await this.fetchTransactions()
+        this.$store.commit('setTransactions', transactions)
+        this.infiniteId++
       }
     },
     isEndDateInvalid() {
       return !this.isValidYearMonth(this.filters.endDate)
     },
-    onSelectAccount(event) {
+    async onSelectAccount(event) {
       this.filters.accountId = event.target.value
-      this.transactions = this.fetchTransactions()
+      const isValid = this.isValidFilter()
+      if (isValid) {
+        this.resetPagination()
+        const transactions = await this.fetchTransactions()
+        this.$store.commit('setTransactions', transactions)
+        this.infiniteId++
+      }
     },
     delegateConvertToRgba(category) {
       return this.convertToRgba(category)
@@ -276,6 +310,9 @@ export default {
       }
       const yearMonthRegex = /^\d{4}-(0[1-9]|1[0-2])$/
       return yearMonthRegex.test(yearMonth)
+    },
+    isValidFilter() {
+      return !this.isStartDateInvalid() && !this.isEndDateInvalid()
     },
     async fetchTransactions() {
       // TODO Fix URL
@@ -300,11 +337,13 @@ export default {
     async infiniteScroll($state) {
       this.pagination.skip += this.pagination.take
       const transactions = await this.fetchTransactions()
-      this.transactions = [...this.transactions, ...transactions]
+
+      this.$store.commit('addTransactions', transactions)
+
       if (transactions && transactions.length) {
         $state.loaded()
       } else {
-        $state.completed()
+        $state.complete()
       }
     },
   },

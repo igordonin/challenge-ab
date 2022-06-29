@@ -20,6 +20,7 @@ export const state = () => ({
     date: null,
   },
   transactions: [],
+  accounts: [],
 })
 
 export const getters = {
@@ -29,8 +30,17 @@ export const getters = {
 }
 
 export const mutations = {
+  setAccounts(state, accounts) {
+    state.accounts = accounts
+  },
   setTransactionDetails(state, { transactionDetails }) {
     state.transactionDetails = transactionDetails
+  },
+  setTransactions(state, transactions) {
+    state.transactions = transactions
+  },
+  addTransactions(state, transactions) {
+    state.transactions = [...state.transactions, ...transactions]
   },
 }
 
@@ -44,6 +54,35 @@ query FetchUniqueTransaction($id: ID!) {
     }
     account {
       name
+    }
+    date
+    amount
+    currency
+  }
+}
+`
+
+const findAllTransactionsQuery = `
+query FilterTransactions(
+  $skip: Int!,
+  $take: Int!,
+  $accountId: String,
+  $startDate: String,
+  $endDate: String
+) {
+  findAllTransactions(
+    skip: $skip,
+    take: $take,
+    accountId: $accountId,
+    startDate: $startDate,
+    endDate: $endDate
+  ) {
+    id
+    reference
+    category {
+      id
+      name
+      color
     }
     date
     amount
@@ -71,5 +110,25 @@ export const actions = {
     })
 
     return convertedTransaction
+  },
+  async fetchTransactionsAction(context, { pagination, filters }) {
+    // TODO Fix URL
+    const response = await this.$axios.post(
+      'http://localhost:4000/api/graphql',
+      {
+        operationName: 'FilterTransactions',
+        query: findAllTransactionsQuery,
+        variables: {
+          skip: pagination.skip || 0,
+          take: pagination.take || 100,
+          accountId: filters.accountId,
+          startDate: filters.startDate,
+          endDate: filters.endDate,
+        },
+      }
+    )
+    const transactions = response.data.data?.findAllTransactions
+
+    return convertTransactions(transactions)
   },
 }
