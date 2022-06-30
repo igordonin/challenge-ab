@@ -152,27 +152,6 @@
 <script>
 import TransactionDetails from '~/components/transaction-details.vue'
 
-const initialLoad = `
-query InitialLoad($skip: Int!, $take: Int!) {
-  findAllAccounts {
-    id
-    name
-  }
-  findAllTransactions(skip: $skip, take: $take) {
-    id
-    reference
-    category {
-      id
-      name
-      color
-    }
-    date
-    amount
-    currency
-  }
-}
-`
-
 const findAllTransactionsQuery = `
 query FilterTransactions(
   $skip: Int!,
@@ -216,21 +195,6 @@ const convertTransactions = (transactions) => {
 export default {
   name: 'IndexPage',
   components: { TransactionDetails },
-  async asyncData({ $axios, store, env }) {
-    const response = await $axios.post(`${env.apiBaseUrl}/api/graphql`, {
-      operationName: 'InitialLoad',
-      query: initialLoad,
-      variables: {
-        skip: 0,
-        take: 100,
-      },
-    })
-    const transactions = response.data.data?.findAllTransactions || []
-    const accounts = response.data.data?.findAllAccounts || []
-
-    store.commit('setTransactions', convertTransactions(transactions))
-    store.commit('setAccounts', [{ id: null, name: 'No Filter' }, ...accounts])
-  },
   data() {
     return {
       infiniteId: +new Date(),
@@ -252,6 +216,9 @@ export default {
     accounts() {
       return this.$store.state.accounts
     },
+  },
+  mounted() {
+    this.$store.dispatch('initialLoad')
   },
   methods: {
     resetPagination() {
@@ -314,20 +281,17 @@ export default {
       return !this.isStartDateInvalid() && !this.isEndDateInvalid()
     },
     async fetchTransactions() {
-      const response = await this.$axios.post(
-        `${process.env.apiBaseUrl}/api/graphql`,
-        {
-          operationName: 'FilterTransactions',
-          query: findAllTransactionsQuery,
-          variables: {
-            skip: this.pagination.skip || 0,
-            take: this.pagination.take || 100,
-            accountId: this.filters.accountId,
-            startDate: this.filters.startDate,
-            endDate: this.filters.endDate,
-          },
-        }
-      )
+      const response = await this.$axios.post('api/graphql', {
+        operationName: 'FilterTransactions',
+        query: findAllTransactionsQuery,
+        variables: {
+          skip: this.pagination.skip || 0,
+          take: this.pagination.take || 100,
+          accountId: this.filters.accountId,
+          startDate: this.filters.startDate,
+          endDate: this.filters.endDate,
+        },
+      })
       const transactions = response.data.data?.findAllTransactions
 
       return convertTransactions(transactions)

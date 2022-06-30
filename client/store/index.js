@@ -91,16 +91,50 @@ query FilterTransactions(
 }
 `
 
+const initialLoad = `
+query InitialLoad($skip: Int!, $take: Int!) {
+  findAllAccounts {
+    id
+    name
+  }
+  findAllTransactions(skip: $skip, take: $take) {
+    id
+    reference
+    category {
+      id
+      name
+      color
+    }
+    date
+    amount
+    currency
+  }
+}
+`
+
 export const actions = {
+  async initialLoad({ commit }) {
+    const response = await this.$axios.post('api/graphql', {
+      operationName: 'InitialLoad',
+      query: initialLoad,
+      variables: {
+        skip: 0,
+        take: 100,
+      },
+    })
+
+    const transactions = response.data.data?.findAllTransactions || []
+    const accounts = response.data.data?.findAllAccounts || []
+
+    commit('setTransactions', convertTransactions(transactions))
+    commit('setAccounts', [{ id: null, name: 'No Filter' }, ...accounts])
+  },
   async fetchTransaction({ commit }, { id }) {
-    const response = await this.$axios.post(
-      `${process.env.apiBaseUrl}/api/graphql`,
-      {
-        operationName: 'FetchUniqueTransaction',
-        query: fetchTransactionQuery,
-        variables: { id },
-      }
-    )
+    const response = await this.$axios.post('api/graphql', {
+      operationName: 'FetchUniqueTransaction',
+      query: fetchTransactionQuery,
+      variables: { id },
+    })
 
     const transaction = response.data.data?.findUniqueTransactionById
     const [convertedTransaction] = convertTransactions([transaction])
@@ -112,20 +146,17 @@ export const actions = {
     return convertedTransaction
   },
   async fetchTransactionsAction(context, { pagination, filters }) {
-    const response = await this.$axios.post(
-      `${process.env.apiBaseUrl}/api/graphql`,
-      {
-        operationName: 'FilterTransactions',
-        query: findAllTransactionsQuery,
-        variables: {
-          skip: pagination.skip || 0,
-          take: pagination.take || 100,
-          accountId: filters.accountId,
-          startDate: filters.startDate,
-          endDate: filters.endDate,
-        },
-      }
-    )
+    const response = await this.$axios.post('api/graphql', {
+      operationName: 'FilterTransactions',
+      query: findAllTransactionsQuery,
+      variables: {
+        skip: pagination.skip || 0,
+        take: pagination.take || 100,
+        accountId: filters.accountId,
+        startDate: filters.startDate,
+        endDate: filters.endDate,
+      },
+    })
     const transactions = response.data.data?.findAllTransactions
 
     return convertTransactions(transactions)

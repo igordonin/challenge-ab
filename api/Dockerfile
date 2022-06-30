@@ -1,6 +1,6 @@
 FROM node:alpine
 
-ENV NODE_ENV=dev
+ENV NODE_ENV=staging
 
 WORKDIR /app
 
@@ -10,4 +10,4 @@ RUN yarn install
 
 COPY . .
 
-CMD  ["yarn", "dev"]
+CMD  ["sh", "-c", "npx prisma generate && yarn dev"] 

@@ -1,6 +1,6 @@
 apiVersion: apps/v1
 kind: Deployment
-metadata: 
+metadata:
   name: client-depl
 spec:
   replicas: 1
@@ -15,9 +15,6 @@ spec:
       containers:
         - name: client
           image: us.gcr.io/challenge-pl/client
-          env: 
-            - name: API_BASE_URL
-              value: 'api-srv'
 ---
 apiVersion: v1
 kind: Service
